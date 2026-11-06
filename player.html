@@ -1,0 +1,168 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#F1A3A3">
+<title>GlamHippie Now Playing</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600;700;800&display=swap">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<!-- PAGINA 3 · NOW PLAYING -->
+<main class="phone">
+  <div class="glow a" id="glowA" aria-hidden="true"></div>
+  <div class="glow b" id="glowB" aria-hidden="true"></div>
+
+  <section class="screen" id="player" aria-label="Now playing">
+    <div class="topbar">
+      <a class="iconbtn" id="back" href="libreria.html" aria-label="Back to library">
+        <svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M15 6l-6 6 6 6"/></svg>
+      </a>
+      <span class="caps" style="color:var(--ink);letter-spacing:2.4px">Now playing</span>
+      <span class="chip30">30m</span>
+    </div>
+    <div class="stage paused" id="stage" aria-hidden="true">
+      <div class="halo" id="halo"></div>
+      <div class="ring"></div><div class="ring"></div><div class="ring"></div>
+      <div class="orb" id="orb">
+        <div class="swirl" id="swirl"></div>
+        <div class="shine"></div>
+        <div class="glass"><div class="win">
+          <svg width="200" height="40" viewBox="0 0 200 40" fill="none" stroke="#111" stroke-width="2" stroke-linecap="round"><path d="M0 20 Q10 4 20 20 T40 20 T60 20 T80 20 T100 20 T120 20 T140 20 T160 20 T180 20 T200 20"/></svg>
+        </div></div>
+      </div>
+    </div>
+    <h1 id="pTitle"></h1>
+    <div class="caps" id="pKind"></div>
+    <div id="pFreq"></div>
+    <div class="hp-chip" id="pHp">
+      <svg class="i" viewBox="0 0 24 24" aria-hidden="true" style="width:16px;height:16px"><path d="M4 15v-3a8 8 0 0 1 16 0v3"/><rect x="3" y="14" width="4" height="7" rx="2"/><rect x="17" y="14" width="4" height="7" rx="2"/></svg>
+      Use headphones for the full effect
+    </div>
+    <div class="hp-space" id="pHpSpace" hidden></div>
+    <div class="prog">
+      <div class="bar"><i id="barFill"></i></div>
+      <div class="times"><span id="tEl">00:00</span><span id="tSt">Tap play to begin</span><span id="tRem">30:00</span></div>
+    </div>
+    <div class="ctrls">
+      <button class="loop" id="loop" aria-label="Loop" aria-pressed="false">
+        <svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M17 2l4 4-4 4"/><path d="M3 11V9a3 3 0 0 1 3-3h15"/><path d="M7 22l-4-4 4-4"/><path d="M21 13v2a3 3 0 0 1-3 3H3"/></svg>
+      </button>
+      <button class="play" id="play" aria-label="Play">
+        <svg id="icPlay" width="32" height="32" viewBox="0 0 24 24" fill="#000" aria-hidden="true"><path d="M8 5.5v13a1 1 0 0 0 1.5.86l10.5-6.5a1 1 0 0 0 0-1.72L9.5 4.64A1 1 0 0 0 8 5.5z"/></svg>
+        <svg id="icPause" width="30" height="30" viewBox="0 0 24 24" fill="#000" aria-hidden="true" hidden><rect x="6" y="5" width="4" height="14" rx="1.2"/><rect x="14" y="5" width="4" height="14" rx="1.2"/></svg>
+      </button>
+      <span class="looplbl" id="loopLbl"></span>
+    </div>
+    <div class="vol">
+      <svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M11 5L6 9H3v6h3l5 4V5z"/></svg>
+      <label for="vol" class="sr">Volume</label>
+      <input id="vol" type="range" min="0" max="100" value="55">
+      <svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M11 5L6 9H3v6h3l5 4V5z"/><path d="M15.5 8.5a5 5 0 0 1 0 7"/><path d="M18.5 5.5a9 9 0 0 1 0 13"/></svg>
+    </div>
+    <p class="pnote" id="pNote"></p>
+  </section>
+</main>
+
+<script src="tracks.js"></script>
+<script>
+(function(){
+  var G=window.GH, $=function(id){return document.getElementById(id);};
+  var S={track:null,playing:false,ended:false,elapsed:0,loop:false,volume:55};
+  var A={ctx:null,master:null,nodes:[],iv:null,lock:null};
+
+  /* ---- motore sonoro (Web Audio, nessun file audio) ---- */
+  function startAudio(t,elapsed){
+    try{
+      var AC=window.AudioContext||window.webkitAudioContext; if(!AC)return;
+      if(!A.ctx)A.ctx=new AC(); A.ctx.resume(); stopNodes();
+      var c=A.ctx, now=c.currentTime, level=S.volume/100*G.MAXGAIN, rem=G.SESSION-(elapsed||0);
+      var m=c.createGain(); m.gain.setValueAtTime(0,now); m.gain.linearRampToValueAtTime(level,now+3);
+      if(rem>63)m.gain.setValueAtTime(level,now+rem-60);
+      m.gain.linearRampToValueAtTime(0,now+rem); m.connect(c.destination); A.master=m;
+      var osc=function(hz){var o=c.createOscillator();o.type="sine";o.frequency.value=hz;A.nodes.push(o);return o;};
+      if(t.cat==="binaural"){
+        [[-1,t.carrier-t.beat/2],[1,t.carrier+t.beat/2]].forEach(function(p){
+          var pan=c.createStereoPanner?c.createStereoPanner():null;
+          if(pan){pan.pan.value=p[0];osc(p[1]).connect(pan);pan.connect(m);} else osc(p[1]).connect(m);
+        });
+      } else if(t.cat==="isochronic"){
+        var amp=c.createGain(); amp.gain.value=.5; var depth=c.createGain(); depth.gain.value=.5;
+        osc(t.pulse).connect(depth); depth.connect(amp.gain); osc(t.tone).connect(amp); amp.connect(m);
+      } else { osc(t.tone).connect(m); }
+      A.nodes.forEach(function(n){n.start(now);n.stop(now+rem+.1);});
+    }catch(e){}
+  }
+  function stopNodes(){A.nodes.forEach(function(n){try{n.stop();}catch(e){}});A.nodes=[];if(A.master){try{A.master.disconnect();}catch(e){}}A.master=null;}
+  function stopAudio(now){
+    if(!A.master||!A.ctx||now){stopNodes();return;}
+    var t=A.ctx.currentTime,g=A.master.gain; g.cancelScheduledValues(t); g.setValueAtTime(g.value,t); g.linearRampToValueAtTime(0,t+.4);
+    var old=A.nodes, oldM=A.master; A.nodes=[]; A.master=null;
+    setTimeout(function(){old.forEach(function(n){try{n.stop();}catch(e){}});try{oldM.disconnect();}catch(e){}},450);
+  }
+  function wake(on){
+    try{
+      if(on&&navigator.wakeLock&&!A.lock){navigator.wakeLock.request("screen").then(function(l){A.lock=l;}).catch(function(){});}
+      if(!on&&A.lock){A.lock.release().catch(function(){});A.lock=null;}
+    }catch(e){}
+  }
+
+  /* ---- interfaccia ---- */
+  function load(){
+    var t=G.byId((location.hash||"").slice(1))||G.TRACKS[0];
+    stopAudio(true); S.track=t; S.elapsed=0; S.ended=false; setPlaying(false);
+    var iso=t.cat==="isochronic";
+    $("glowA").style.background=t.c1; $("glowB").style.background=t.c2;
+    $("pTitle").textContent=t.title; $("pKind").textContent=G.cat(t.cat).kind; $("pFreq").textContent=t.freq;
+    $("pHp").hidden=!t.hp; $("pHpSpace").hidden=t.hp;
+    $("pNote").textContent=t.desc+" Fades out gently when your session ends. Keep your screen on while listening.";
+    $("halo").style.background=G.cloud(t);
+    $("swirl").style.background="conic-gradient(from 0deg,"+t.c1+","+t.c2+",#FFF4F1,"+t.c1+")";
+    var st=$("stage"); st.style.setProperty("--rd",iso?"2.4s":"4.8s"); st.style.setProperty("--wd",iso?"0.9s":"2.2s");
+    $("orb").style.setProperty("--sh",G.rgba(t.c1,.55));
+    $("back").href="libreria.html#"+t.cat;
+    document.title=t.title+" · GlamHippie";
+    updateTime();
+  }
+  function setPlaying(on){
+    S.playing=on;
+    $("stage").classList.toggle("paused",!on);
+    $("icPlay").hidden=on; $("icPause").hidden=!on;
+    $("play").setAttribute("aria-label",on?"Pause":"Play");
+    clearInterval(A.iv); A.iv=null;
+    if(on){A.iv=setInterval(tick,1000);wake(true);} else wake(false);
+    updateTime();
+  }
+  function tick(){
+    S.elapsed++;
+    if(S.elapsed>=G.SESSION){
+      if(S.loop){S.elapsed=0;startAudio(S.track,0);}
+      else {S.elapsed=G.SESSION;S.ended=true;stopAudio(true);setPlaying(false);return;}
+    }
+    updateTime();
+  }
+  function updateTime(){
+    $("barFill").style.width=(S.elapsed/G.SESSION*100)+"%";
+    $("tEl").textContent=G.mmss(S.elapsed); $("tRem").textContent=G.mmss(G.SESSION-S.elapsed);
+    $("tSt").textContent=S.ended?"Session complete":(S.playing?"Playing":(S.elapsed>0?"Paused":"Tap play to begin"));
+  }
+
+  $("play").addEventListener("click",function(){
+    if(S.playing){stopAudio();setPlaying(false);}
+    else {if(S.ended){S.elapsed=0;S.ended=false;} startAudio(S.track,S.elapsed); setPlaying(true);}
+  });
+  $("loop").addEventListener("click",function(){
+    S.loop=!S.loop; this.setAttribute("aria-pressed",String(S.loop)); $("loopLbl").textContent=S.loop?"Loop on":"";
+  });
+  $("vol").addEventListener("input",function(e){
+    S.volume=Number(e.target.value);
+    if(A.master&&A.ctx){var t=A.ctx.currentTime;A.master.gain.cancelScheduledValues(t);A.master.gain.setTargetAtTime(S.volume/100*G.MAXGAIN,t,.1);}
+  });
+  $("back").addEventListener("click",function(){stopAudio(true);});
+  window.addEventListener("hashchange",load);
+  load();
+})();
+</script>
+</body>
+</html>

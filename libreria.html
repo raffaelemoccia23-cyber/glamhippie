@@ -1,0 +1,91 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#F1A3A3">
+<title>GlamHippie Libreria</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600;700;800&display=swap">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<!-- PAGINA 2 · LIBRERIA PROTOCOLLI -->
+<main class="phone">
+  <div class="glow a" aria-hidden="true" style="background:#F1A3A3"></div>
+  <div class="glow b" aria-hidden="true" style="background:#FBD9C4"></div>
+
+  <section class="screen" id="library" aria-label="Library">
+    <div class="topbar">
+      <div class="brand">
+        <svg width="30" height="22" viewBox="0 0 30 22" fill="none" stroke="#F1A3A3" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M2 10v2M7 6v10M12 2v18M17 7v8M22 4v14M27 9v4"/></svg>
+        GLAM HIPPIE
+      </div>
+      <a class="iconbtn" href="index.html" aria-label="Sign out">
+        <svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M15 4h3a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-3"/><path d="M10 17l-5-5 5-5"/><path d="M5 12h11"/></svg>
+      </a>
+    </div>
+    <div class="libhead">
+      <h1>Your<br>frequencies</h1>
+      <p>35 tracks, tuned live for you.</p>
+    </div>
+    <div class="tabs" role="tablist" aria-label="Categories" id="tabs"></div>
+    <div class="scroll" id="scroll">
+      <a class="feat" id="feat" href="player.html">
+        <div class="card">
+          <div class="orb" id="featOrb" aria-hidden="true"></div>
+          <div class="in">
+            <div class="caps">Start here</div>
+            <h2 id="featTitle"></h2>
+            <div class="f" id="featFreq"></div>
+            <div class="go"><span>Start today’s session</span>
+              <svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14"/><path d="M13 6l6 6-6 6"/></svg></div>
+          </div>
+        </div>
+      </a>
+      <div class="hp-note" id="hpNote">
+        <svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 15v-3a8 8 0 0 1 16 0v3"/><rect x="3" y="14" width="4" height="7" rx="2"/><rect x="17" y="14" width="4" height="7" rx="2"/></svg>
+        Best with headphones
+      </div>
+      <div class="list" id="list"></div>
+      <p class="wellness">These sounds are intended to support relaxation and wellness. They are not a medical treatment.</p>
+    </div>
+  </section>
+</main>
+
+<script src="tracks.js"></script>
+<script>
+(function(){
+  var G=window.GH;
+  function render(){
+    var tab=(location.hash||"").slice(1);
+    if(!G.CATS.some(function(c){return c.id===tab;})) tab="binaural";
+    var tabs=document.getElementById("tabs"); tabs.innerHTML="";
+    G.CATS.forEach(function(c){
+      var b=document.createElement("button");
+      b.setAttribute("role","tab"); b.setAttribute("aria-selected",String(c.id===tab));
+      b.innerHTML=c.label+"<small>"+c.count+"</small>";
+      b.addEventListener("click",function(){ location.hash=c.id; });
+      tabs.appendChild(b);
+    });
+    var items=G.TRACKS.filter(function(t){return t.cat===tab;}), f=items[0];
+    document.getElementById("featOrb").style.background=G.cloud(f);
+    document.getElementById("featTitle").textContent=f.title;
+    document.getElementById("featFreq").textContent=f.freq;
+    document.getElementById("feat").href="player.html#"+f.id;
+    document.getElementById("hpNote").hidden=tab!=="binaural";
+    var list=document.getElementById("list"); list.innerHTML="";
+    items.forEach(function(t){
+      var r=document.createElement("a"); r.className="row"; r.href="player.html#"+t.id;
+      r.innerHTML='<span class="dot" aria-hidden="true" style="background:'+G.dot(t)+';box-shadow:0 6px 16px '+G.rgba(t.c1,.45)+'"></span>'+
+        '<span class="t"><b></b><span></span></span>'+(t.hp?G.HP_ICON:"")+G.CHEV;
+      r.querySelector(".t b").textContent=t.title; r.querySelector(".t span").textContent=t.freq;
+      list.appendChild(r);
+    });
+    document.getElementById("scroll").scrollTop=0;
+  }
+  window.addEventListener("hashchange",render);
+  render();
+})();
+</script>
+</body>
+</html>

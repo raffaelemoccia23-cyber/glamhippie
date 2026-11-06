@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#F1A3A3">
+<title>GlamHippie Frequency</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600;700;800&display=swap">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<!-- PAGINA 1 · ACCESSO -->
+<main class="phone">
+  <div class="glow a" aria-hidden="true" style="background:#F1A3A3"></div>
+  <div class="glow b" aria-hidden="true" style="background:#FBD9C4"></div>
+
+  <section class="screen" id="access" aria-label="Access">
+    <img src="logo.png" alt="Glam Hippie, a little boujee, a lot boho">
+    <h1>Welcome in</h1>
+    <p class="lead">Enter your personal code to open your frequency library.</p>
+    <form id="codeForm" novalidate>
+      <label for="code" class="caps">Access code</label>
+      <div class="field" id="field">
+        <input id="code" type="password" autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="8 letters or numbers" maxlength="12">
+        <button type="button" id="eye" aria-label="Show code">
+          <svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg>
+        </button>
+      </div>
+      <p class="err" id="err" role="alert" hidden>That code didn’t work. Check it and try again.</p>
+      <button type="submit" class="primary">Enter</button>
+    </form>
+    <p class="foot">Locked out? Write to Erin at <b>[EMAIL ERIN]</b></p>
+  </section>
+</main>
+
+<script>
+(function(){
+  var code=document.getElementById("code"), err=document.getElementById("err"), field=document.getElementById("field");
+  code.addEventListener("input",function(){
+    var v=code.value.toUpperCase().replace(/[^A-Z0-9]/g,"");
+    if(v!==code.value) code.value=v;
+    err.hidden=true; field.classList.remove("bad");
+  });
+  document.getElementById("eye").addEventListener("click",function(){
+    var on=code.type==="password"; code.type=on?"text":"password";
+    this.setAttribute("aria-label",on?"Hide code":"Show code");
+  });
+  document.getElementById("codeForm").addEventListener("submit",function(e){
+    e.preventDefault();
+    // Prototipo: qualsiasi codice di 8+ caratteri entra. Nell'app vera il controllo lo fa il server.
+    if(code.value.length>=8){ location.href="libreria.html"; }
+    else { err.hidden=false; field.classList.add("bad"); code.focus(); }
+  });
+})();
+</script>
+</body>
+</html>
